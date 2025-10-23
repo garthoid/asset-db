@@ -6,6 +6,7 @@ package neo4j
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/url"
 	"strings"
@@ -39,11 +40,39 @@ func New(dbtype, dsn string) (*neoRepository, error) {
 	}
 	dbname := strings.TrimPrefix(u.Path, "/")
 
-	newdsn := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	// Determine the correct scheme and TLS configuration
+	var newdsn string
+	var tlsConfig *tls.Config
+
+	switch u.Scheme {
+	case "bolt+ssc", "neo4j+ssc":
+		// For self-signed certificates, use the secure scheme but skip verification
+		baseScheme := strings.TrimSuffix(u.Scheme, "+ssc")
+		newdsn = fmt.Sprintf("%s+s://%s", baseScheme, u.Host)
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	case "bolt+s", "bolt+sec", "neo4j+s", "neo4j+sec":
+		// For regular TLS connections
+		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	case "bolt", "neo4j":
+		// For non-TLS connections
+		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	default:
+		// Fallback to original behavior
+		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	}
+
+	// Create driver with appropriate configuration
 	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, func(cfg *config.Config) {
 		cfg.MaxConnectionPoolSize = 20
 		cfg.MaxConnectionLifetime = time.Hour
 		cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
+
+		// Apply TLS configuration if needed
+		if tlsConfig != nil {
+			cfg.TlsConfig = tlsConfig
+		}
 	})
 	if err != nil {
 		return nil, err
