@@ -52,7 +52,7 @@ func New(dbtype, dsn string) (*neoRepository, error) {
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
-	case "bolt+s", "bolt+sec", "neo4j+s", "neo4j+sec":
+	case "bolt+s", "neo4j+s":
 		// For regular TLS connections
 		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 	case "bolt", "neo4j":
