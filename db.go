@@ -6,6 +6,7 @@ package assetdb
 
 import (
 	"context"
+	"crypto/tls"
 	"embed"
 	"fmt"
 	"math/rand"
@@ -97,11 +98,31 @@ func neoMigrate(dsn string) error {
 	}
 	dbname := strings.TrimPrefix(u.Path, "/")
 
-	newdsn := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	// Handle bolt+ssc scheme for self-signed certificates
+	var newdsn string
+	var tlsConfig *tls.Config
+
+	switch u.Scheme {
+	case "bolt+ssc", "neo4j+ssc":
+		baseScheme := strings.TrimSuffix(u.Scheme, "+ssc")
+		newdsn = fmt.Sprintf("%s+s://%s", baseScheme, u.Host)
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	case "bolt+s", "bolt+sec", "neo4j+s", "neo4j+sec":
+		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	default:
+		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	}
+	
 	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, func(cfg *config.Config) {
 		cfg.MaxConnectionPoolSize = 20
 		cfg.MaxConnectionLifetime = time.Hour
 		cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
+
+		if tlsConfig != nil {
+			cfg.TlsConfig = tlsConfig
+		}
 	})
 	if err != nil {
 		return err
