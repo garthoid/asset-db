@@ -1,4 +1,4 @@
-module github.com/owasp-amass/asset-db
+module github.com/garthoid/asset-db
 
 go 1.24
 
