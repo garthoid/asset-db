@@ -14,15 +14,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glebarez/sqlite"
-	neo4jdb "github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	neomigrations "github.com/garthoid/asset-db/migrations/neo4j"
 	pgmigrations "github.com/garthoid/asset-db/migrations/postgres"
 	sqlitemigrations "github.com/garthoid/asset-db/migrations/sqlite3"
 	"github.com/garthoid/asset-db/repository"
 	"github.com/garthoid/asset-db/repository/neo4j"
 	"github.com/garthoid/asset-db/repository/sqlrepo"
+	"github.com/glebarez/sqlite"
+	neo4jdb "github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	migrate "github.com/rubenv/sql-migrate"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -108,13 +108,14 @@ func neoMigrate(dsn string) error {
 		newdsn = fmt.Sprintf("%s+s://%s", baseScheme, u.Host)
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: true,
+			ServerName:         "",
 		}
 	case "bolt+s", "bolt+sec", "neo4j+s", "neo4j+sec":
 		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 	default:
 		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 	}
-	
+
 	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, func(cfg *config.Config) {
 		cfg.MaxConnectionPoolSize = 20
 		cfg.MaxConnectionLifetime = time.Hour
