@@ -42,38 +42,48 @@ func New(dbtype, dsn string) (*neoRepository, error) {
 
 	// Determine the correct scheme and TLS configuration
 	var newdsn string
-	var tlsConfig *tls.Config
+	var configFunc func(*config.Config)
 
 	switch u.Scheme {
 	case "bolt+ssc", "neo4j+ssc":
 		// For self-signed certificates, use the secure scheme but skip verification
 		baseScheme := strings.TrimSuffix(u.Scheme, "+ssc")
+
+		// Use bolt+s or neo4j+s for encrypted connection
 		newdsn = fmt.Sprintf("%s+s://%s", baseScheme, u.Host)
-		tlsConfig = &tls.Config{
-			InsecureSkipVerify: true,
+
+		// Configure to skip certificate verification
+		configFunc = func(cfg *config.Config) {
+			cfg.MaxConnectionPoolSize = 20
+			cfg.MaxConnectionLifetime = time.Hour
+			cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
+			cfg.TlsConfig = &tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         "", // Don't verify hostname
+			}
 		}
+
 	case "bolt+s", "neo4j+s":
 		// For regular TLS connections
 		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
-	case "bolt", "neo4j":
-		// For non-TLS connections
-		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+		configFunc = func(cfg *config.Config) {
+			cfg.MaxConnectionPoolSize = 20
+			cfg.MaxConnectionLifetime = time.Hour
+			cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
+		}
+
 	default:
 		// Fallback to original behavior
 		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+		configFunc = func(cfg *config.Config) {
+			cfg.MaxConnectionPoolSize = 20
+			cfg.MaxConnectionLifetime = time.Hour
+			cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
+		}
 	}
 
 	// Create driver with appropriate configuration
-	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, func(cfg *config.Config) {
-		cfg.MaxConnectionPoolSize = 20
-		cfg.MaxConnectionLifetime = time.Hour
-		cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
-
-		// Apply TLS configuration if needed
-		if tlsConfig != nil {
-			cfg.TlsConfig = tlsConfig
-		}
-	})
+	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, configFunc)
 	if err != nil {
 		return nil, err
 	}
