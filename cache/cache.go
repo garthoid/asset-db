@@ -7,7 +7,7 @@ package cache
 import (
 	"time"
 
-	"github.com/owasp-amass/asset-db/repository"
+	"github.com/garthoid/asset-db/repository"
 )
 
 type Cache struct {

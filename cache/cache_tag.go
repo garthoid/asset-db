@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/types"
 )
 
 func (c *Cache) createCacheEntityTag(entity *types.Entity, name, refID string, since time.Time) error {

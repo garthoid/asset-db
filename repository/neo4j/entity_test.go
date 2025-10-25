@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 	"github.com/owasp-amass/open-asset-model/dns"
 	oamnet "github.com/owasp-amass/open-asset-model/network"

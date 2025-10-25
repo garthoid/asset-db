@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/glebarez/sqlite"
-	pgmigrations "github.com/owasp-amass/asset-db/migrations/postgres"
-	sqlitemigrations "github.com/owasp-amass/asset-db/migrations/sqlite3"
-	"github.com/owasp-amass/asset-db/types"
+	pgmigrations "github.com/garthoid/asset-db/migrations/postgres"
+	sqlitemigrations "github.com/garthoid/asset-db/migrations/sqlite3"
+	"github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 	"github.com/owasp-amass/open-asset-model/dns"
 	"github.com/owasp-amass/open-asset-model/general"

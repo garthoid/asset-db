@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	assetdb "github.com/owasp-amass/asset-db"
-	"github.com/owasp-amass/asset-db/repository/sqlrepo"
-	dbt "github.com/owasp-amass/asset-db/types"
+	assetdb "github.com/garthoid/asset-db"
+	"github.com/garthoid/asset-db/repository/sqlrepo"
+	dbt "github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 	oamdns "github.com/owasp-amass/open-asset-model/dns"
 	oamgen "github.com/owasp-amass/open-asset-model/general"

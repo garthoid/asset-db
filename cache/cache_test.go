@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	assetdb "github.com/owasp-amass/asset-db"
-	"github.com/owasp-amass/asset-db/repository"
-	"github.com/owasp-amass/asset-db/repository/sqlrepo"
+	assetdb "github.com/garthoid/asset-db"
+	"github.com/garthoid/asset-db/repository"
+	"github.com/garthoid/asset-db/repository/sqlrepo"
 	"github.com/stretchr/testify/assert"
 )
 

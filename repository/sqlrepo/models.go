@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 	"github.com/owasp-amass/open-asset-model/account"
 	oamtls "github.com/owasp-amass/open-asset-model/certificate"

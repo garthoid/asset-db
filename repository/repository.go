@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/owasp-amass/asset-db/repository/neo4j"
-	"github.com/owasp-amass/asset-db/repository/sqlrepo"
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/repository/neo4j"
+	"github.com/garthoid/asset-db/repository/sqlrepo"
+	"github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 )
 
