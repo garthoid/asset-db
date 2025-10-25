@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	neomigrations "github.com/owasp-amass/asset-db/migrations/neo4j"
+	neomigrations "github.com/garthoid/asset-db/migrations/neo4j"
 )
 
 var store *neoRepository

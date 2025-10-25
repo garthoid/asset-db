@@ -7,7 +7,7 @@ package assetdb
 import (
 	"testing"
 
-	"github.com/owasp-amass/asset-db/repository/sqlrepo"
+	"github.com/garthoid/asset-db/repository/sqlrepo"
 )
 
 func TestNew(t *testing.T) {

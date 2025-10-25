@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/types"
 	"github.com/owasp-amass/open-asset-model/dns"
 	"github.com/stretchr/testify/assert"
 )

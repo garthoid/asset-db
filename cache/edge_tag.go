@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 )
 

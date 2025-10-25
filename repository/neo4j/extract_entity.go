@@ -10,7 +10,7 @@ import (
 	"net/netip"
 
 	neo4jdb "github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/owasp-amass/asset-db/types"
+	"github.com/garthoid/asset-db/types"
 	oam "github.com/owasp-amass/open-asset-model"
 	"github.com/owasp-amass/open-asset-model/account"
 	oamcert "github.com/owasp-amass/open-asset-model/certificate"
