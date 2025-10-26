@@ -108,7 +108,7 @@ func neoMigrate(dsn string) error {
 		newdsn = fmt.Sprintf("%s+s://%s", baseScheme, u.Host)
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: true,
-			ServerName:         "",
+			ServerName:         u.Hostname(),
 		}
 	case "bolt+s", "bolt+sec", "neo4j+s", "neo4j+sec":
 		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
