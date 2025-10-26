@@ -98,43 +98,50 @@ func neoMigrate(dsn string) error {
 	}
 	dbname := strings.TrimPrefix(u.Path, "/")
 
-	// Handle bolt+ssc scheme for self-signed certificates
-	var newdsn string
-	var tlsConfig *tls.Config
+	// Force bolt:// and manage TLS explicitly via cfg.TlsConfig
+	base := u.Host
+	if q := u.RawQuery; q != "" {
+		base = base + "?" + q
+	}
+	newdsn := fmt.Sprintf("bolt://%s", base)
 
+	var tlsConfig *tls.Config
 	switch u.Scheme {
 	case "bolt+ssc", "neo4j+ssc":
-		baseScheme := strings.TrimSuffix(u.Scheme, "+ssc")
-		newdsn = fmt.Sprintf("%s+s://%s", baseScheme, u.Host)
 		tlsConfig = &tls.Config{
-			InsecureSkipVerify: true,
-			ServerName:         u.Hostname(),
+			InsecureSkipVerify: true,         // allow self-signed
+			ServerName:         u.Hostname(), // SNI consistency
+			MinVersion:         tls.VersionTLS12,
 		}
-	case "bolt+s", "bolt+sec", "neo4j+s", "neo4j+sec":
-		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	case "bolt+s", "neo4j+s":
+		tlsConfig = &tls.Config{
+			ServerName: u.Hostname(),
+			MinVersion: tls.VersionTLS12,
+		}
+	case "bolt", "neo4j":
+		// no TLS
 	default:
-		newdsn = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+		return fmt.Errorf("neoMigrate: unsupported scheme %q", u.Scheme)
 	}
 
 	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, func(cfg *config.Config) {
 		cfg.MaxConnectionPoolSize = 20
 		cfg.MaxConnectionLifetime = time.Hour
 		cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
-
-		if tlsConfig != nil {
-			cfg.TlsConfig = tlsConfig
-		}
+		cfg.TlsConfig = tlsConfig
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("neoMigrate: create driver: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Set timeout for TLS Handshake and initial connect.
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	if err := driver.VerifyConnectivity(ctx); err != nil {
-		return err
+		return fmt.Errorf("neoMigrate: verify connectivity to %s: %w", newdsn, err)
 	}
+
 	defer func() { _ = driver.Close(context.Background()) }()
 
 	return neomigrations.InitializeSchema(driver, dbname)
