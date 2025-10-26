@@ -98,37 +98,34 @@ func neoMigrate(dsn string) error {
 	}
 	dbname := strings.TrimPrefix(u.Path, "/")
 
-	// Force bolt:// and manage TLS explicitly via cfg.TlsConfig
-	base := u.Host
-	if q := u.RawQuery; q != "" {
-		base = base + "?" + q
-	}
-	newdsn := fmt.Sprintf("bolt://%s", base)
+	// --- SUGGESTED CHANGE: START ---
+	// Use the original DSN. The driver natively handles bolt+s and bolt+ssc.
+	originalDSN := dsn
+	var tlsConfig *tls.Config // Will remain nil for +s and +ssc
 
-	var tlsConfig *tls.Config
 	switch u.Scheme {
 	case "bolt+ssc", "neo4j+ssc":
-		tlsConfig = &tls.Config{
-			InsecureSkipVerify: true,         // allow self-signed
-			ServerName:         u.Hostname(), // SNI consistency
-			MinVersion:         tls.VersionTLS12,
-		}
+		// Let the driver handle this scheme natively
 	case "bolt+s", "neo4j+s":
-		tlsConfig = &tls.Config{
-			ServerName: u.Hostname(),
-			MinVersion: tls.VersionTLS12,
-		}
+		// Let the driver handle this scheme natively
 	case "bolt", "neo4j":
-		// no TLS
+		// Driver may default to encryption, so explicitly disable it.
+		tlsConfig = nil
 	default:
 		return fmt.Errorf("neoMigrate: unsupported scheme %q", u.Scheme)
 	}
+	// --- SUGGESTED CHANGE: END ---
 
-	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, func(cfg *config.Config) {
+	driver, err := neo4jdb.NewDriverWithContext(originalDSN, auth, func(cfg *config.Config) { // <-- Use originalDSN
 		cfg.MaxConnectionPoolSize = 20
 		cfg.MaxConnectionLifetime = time.Hour
 		cfg.ConnectionLivenessCheckTimeout = 10 * time.Minute
-		cfg.TlsConfig = tlsConfig
+		// --- SUGGESTED CHANGE: START ---
+		// Only set TlsConfig if we're *forcing* no-TLS.
+		if u.Scheme == "bolt" || u.Scheme == "neo4j" {
+			cfg.TlsConfig = tlsConfig // which is nil
+		}
+		// --- SUGGESTED CHANGE: END ---
 	})
 	if err != nil {
 		return fmt.Errorf("neoMigrate: create driver: %w", err)
@@ -139,7 +136,8 @@ func neoMigrate(dsn string) error {
 	defer cancel()
 
 	if err := driver.VerifyConnectivity(ctx); err != nil {
-		return fmt.Errorf("neoMigrate: verify connectivity to %s: %w", newdsn, err)
+		// --- SUGGESTED CHANGE: Use originalDSN in error ---
+		return fmt.Errorf("neoMigrate: verify connectivity to %s: %w", originalDSN, err)
 	}
 
 	defer func() { _ = driver.Close(context.Background()) }()

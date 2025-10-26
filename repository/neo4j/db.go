@@ -6,8 +6,6 @@ package neo4j
 
 import (
 	"context"
-	"crypto/tls"
-	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -40,14 +38,12 @@ func New(dbtype, dsn string) (*neoRepository, error) {
 	}
 	dbname := strings.TrimPrefix(u.Path, "/")
 
-	// --- FIX v2: START ---
-	//
-	// ALWAYS use the 'bolt://' scheme for the DSN.
-	// The 'neo4j://' scheme is for cluster discovery and will fail.
-	// We will manually configure TLS in the configFunc.
-	newdsn := fmt.Sprintf("bolt://%s", u.Host)
+	// --- SUGGESTED CHANGE: START ---
 
-	// The configFunc will manually configure TLS based on the *original* scheme
+	// Use the original DSN. The driver natively handles bolt+s and bolt+ssc.
+	originalDSN := dsn
+
+	// The configFunc will manually configure TLS *only* for unencrypted schemes.
 	configFunc := func(cfg *config.Config) {
 		// Apply common settings
 		cfg.MaxConnectionPoolSize = 20
@@ -56,25 +52,18 @@ func New(dbtype, dsn string) (*neoRepository, error) {
 
 		switch u.Scheme {
 		case "bolt+ssc", "neo4j+ssc":
-			// Enable encryption AND skip verification
-			cfg.TlsConfig = &tls.Config{
-				InsecureSkipVerify: true,
-				ServerName:         u.Hostname(),
-			}
+			// Let the driver handle this scheme natively
 		case "bolt+s", "neo4j+s":
-			// Enable encryption AND perform full verification
-			cfg.TlsConfig = &tls.Config{
-				ServerName: u.Hostname(),
-			}
+			// Let the driver handle this scheme natively
 		case "bolt", "neo4j":
-			// Disable encryption
+			// Driver may default to encryption, so explicitly disable it.
 			cfg.TlsConfig = nil
 		}
 	}
-	// --- FIX v2: END ---
+	// --- SUGGESTED CHANGE: END ---
 
 	// Create driver with appropriate configuration
-	driver, err := neo4jdb.NewDriverWithContext(newdsn, auth, configFunc)
+	driver, err := neo4jdb.NewDriverWithContext(originalDSN, auth, configFunc) // <-- Use originalDSN
 	if err != nil {
 		return nil, err
 	}
