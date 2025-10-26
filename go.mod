@@ -6,7 +6,7 @@ require (
 	github.com/caffix/stringset v0.2.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/google/uuid v1.6.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/owasp-amass/open-asset-model v0.15.0
 	github.com/rubenv/sql-migrate v1.8.0
 	github.com/stretchr/testify v1.9.0
